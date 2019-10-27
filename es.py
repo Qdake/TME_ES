@@ -19,7 +19,7 @@ from deap import benchmarks
 from deap import creator
 from deap import tools
 
-IND_SIZE = 16
+IND_SIZE = 2
 MIN_VALUE = 15
 MAX_VALUE = 25
 MIN_STRATEGY = 0.5
@@ -94,6 +94,7 @@ def launch_es(mu=100, lambda_=200, cxpb=0.6, mutpb=0.3, ngen=1000, display=False
 
     if halloffame is not None:
         halloffame.update(population)
+        
 
     record = stats.compile(population) if stats is not None else {}
     logbook.record(gen=0, nevals=len(invalid_ind), **record)
@@ -106,11 +107,24 @@ def launch_es(mu=100, lambda_=200, cxpb=0.6, mutpb=0.3, ngen=1000, display=False
         ### A completer pour implementer un ES en affichant regulièrement les resultats a l'aide de la fonction plot_results fournie ###
         ### Vous pourrez tester plusieurs des algorithmes implémentés dans DEAP pour générer une population d'"enfants" 
         ### à partir de la population courante et pour sélectionner les géniteurs de la prochaine génération
+        
+        offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
 
+        # Evaluate the individuals with an invalid fitness
+        invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
+        fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
+        for ind, fit in zip(invalid_ind, fitnesses):
+            ind.fitness.values = fit
+        
+        
         # Update the hall of fame with the generated individuals
         if halloffame is not None:
             halloffame.update(population)
-
+            
+        population[:] = toolbox.select(population + offspring, mu)
+        
+        plot_results(ma_func, population)
+        
         # Update the statistics with the new population
         record = stats.compile(population) if stats is not None else {}
         logbook.record(gen=gen, nevals=len(invalid_ind), **record)
