@@ -39,6 +39,10 @@ creator.create("Strategy", array.array, typecode="d")
 
 # Génération d'un individu avec une distribution uniforme dans les bornes indiquées
 def generateES(icls, scls, size, imin, imax, smin, smax):
+    '''   icls  est la classe Individual
+           scls  est la class Strategie
+           size  est IND_SIZE
+    '''
     ind = icls(random.uniform(imin, imax) for _ in range(size))
     ind.strategy = scls(random.uniform(smin, smax) for _ in range(size))
     return ind
@@ -63,7 +67,7 @@ toolbox.register("individual", generateES, creator.Individual, creator.Strategy,
     IND_SIZE, MIN_VALUE, MAX_VALUE, MIN_STRATEGY, MAX_STRATEGY)
 toolbox.register("population", tools.initRepeat, list, toolbox.individual)
 toolbox.register("mate", tools.cxESBlend, alpha=0.1)
-toolbox.register("mutate", tools.mutESLogNormal, c=1.0, indpb=0.03)
+toolbox.register("mutate", tools.mutESLogNormal, c=1.0, indpb=0.1)
 toolbox.register("select", tools.selTournament, tournsize=3)
 toolbox.register("evaluate", benchmarks.ackley)
 
@@ -71,8 +75,13 @@ toolbox.register("evaluate", benchmarks.ackley)
 toolbox.decorate("mate", checkStrategy(MIN_STRATEGY))
 toolbox.decorate("mutate", checkStrategy(MIN_STRATEGY))
 
-def launch_es(mu=100, lambda_=200, cxpb=0.6, mutpb=0.3, ngen=1000, display=False, verbose=False):
-
+def launch_es(mu=100, lambda_=200, cxpb=0.4, mutpb=0.3, ngen=1000, display=False, verbose=False):
+    '''mu – The number of individuals to select for the next generation.  
+        lambda_ – The number of children to produce at each generation.  
+        cxpb – The probability that an offspring is produced by crossover. 
+        mutpb – The probability that an offspring is produced by mutation.  
+        ngen – The number of generation.
+    '''
     # Initialisation 
     random.seed()
 
@@ -103,13 +112,14 @@ def launch_es(mu=100, lambda_=200, cxpb=0.6, mutpb=0.3, ngen=1000, display=False
 
     # Boucle de l'algorithme évolutionniste
     for gen in range(1, ngen + 1):
-
+    
         ### A completer pour implementer un ES en affichant regulièrement les resultats a l'aide de la fonction plot_results fournie ###
         ### Vous pourrez tester plusieurs des algorithmes implémentés dans DEAP pour générer une population d'"enfants" 
         ### à partir de la population courante et pour sélectionner les géniteurs de la prochaine génération
         
-        offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
-
+       #offspring = algorithms.varOr(population, toolbox, lambda_, cxpb, mutpb)
+        offspring = algorithms.varAnd(population, toolbox, cxpb, mutpb)
+      
         # Evaluate the individuals with an invalid fitness
         invalid_ind = [ind for ind in offspring if not ind.fitness.valid]
         fitnesses = toolbox.map(toolbox.evaluate, invalid_ind)
